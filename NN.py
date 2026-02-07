@@ -1,54 +1,60 @@
-import math
+import torch as tc
+import torch.nn as nn
 
-class Node:
-    def __init__(self, bias=0.0, dec=0.9):
-        self.bias = bias
-        self.dec = dec
-        self.output = 0.0
-        self.e = None 
-
-    def Out(self, inputs, weights):
-        if self.e is None:
-            self.e = [0.0] * len(weights)
-
-        self.output = sum(i * w for i, w in zip(inputs, weights)) + self.bias
-        y = math.tanh(self.output)
-
-        deri = 1.0 - y * y #calc how much final output changes with self.output(cuz sometimes if self.output is too high, tanh wouldnt change much, so its eligibility would have to be low)
-
-        for k in range(len(weights)):
-            self.e[k] = self.dec * self.e[k] + inputs[k] * deri
-
+class BrainLayer(nn.Module):
+    def __init__(self, numin,numout):
+        super().__init__()
+        self.actLayer = nn.Linear(numin,numout)
+        self.e = tc.zeros_like(self.actLayer.weight)
+        nn.init.normal_(self.actLayer.weight, 0, 0.1)
+        self.actfn = nn.LeakyReLU(0.01)
+    def forward(self,x, out: bool):
+        if out:
+            y = self.actfn(self.actLayer(x))
+        else:
+            y = tc.tanh(self.actLayer(x))
+        self.lx = x.detach()
+        self.ly = y.detach()
         return y
-
-
-#very basic, no hidden layer
-class NeuralNet:
-    def __init__(self, numInput, numOutput):
-        self.numInput = numInput
-        self.numOutput = numOutput
-
-        self.weights = [
-            [0.0 for _ in range(numInput)]
-            for _ in range(numOutput)
-        ]
-        self.outputLayer = [Node() for _ in range(numOutput)]
-
-    def Out(self, inputs):
-        outputs = []
-        for j in range(self.numOutput):
-            out = self.outputLayer[j].Out(
-                inputs,
-                self.weights[j]
-            )
-            outputs.append(out)
-        return outputs
+    def UpdateE(self, dec): 
+        self.e = dec * self.e + tc.outer(self.ly, self.lx) 
     
-    def HebbLearn(self, a: float, inputs):
-        nodesArray = self.outputLayer
-        for i in range(len(nodesArray)):
-            for j in range(len(nodesArray[i].e)):
-                self.weights[i][j] += a * nodesArray[i].e * inputs[j] * math.tanh(nodesArray[i].output)
-            nodesArray[i].bias += a * math.tanh(nodesArray[i].output) 
+    def HebbLearn(self, lr, deltaF): 
+        with tc.no_grad(): 
+            self.actLayer.weight += lr * deltaF * self.e
+
+class Brain(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lays = []
+    def AddLayer(self,l : BrainLayer):
+        self.lays.append(l)
+    def BuildBrain(self):
+        self.layers = nn.ModuleList(self.lays)
+
+    def forward(self, x):
+        for i, layer in enumerate(self.layers):
+            out = (i < len(self.layers) - 1)
+            x = layer(x, out)
+        return x
+
+    def UpdateE(self, dec):
+        for layer in self.layers:
+            layer.UpdateE(dec)
+
+    def HebbPulse(self, lr, deltaF):   
+        for layer in self.layers:
+            layer.HebbLearn(lr,deltaF)
+
+def PeanutBrainBuild():
+    brain = Brain()
+    brain.AddLayer(BrainLayer(7,16))
+    brain.AddLayer(BrainLayer(16,8))
+    brain.AddLayer(BrainLayer(8,2))
+    brain.BuildBrain()
+    return brain
+
+
+
 
 

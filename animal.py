@@ -1,12 +1,10 @@
 from NN import *
-
-
 class Animal:
     def __init__(self,name,powLevel,Hunger,Fertility,isPredator : bool = False):
        self.Name = name
        self.powLevel = powLevel
        self.Hunger = Hunger
-       self.Fertility = Fertility
+       self.Fertility = Fertility       
        self.EnemyDist = 0
        self.Satiation = 100
        self.FoodDist = 0
@@ -14,7 +12,7 @@ class Animal:
        self.isPredator = int(isPredator)
        self.Fitness = 0
        self.isAlive = True
-       self.nn = NeuralNet(7,2)
+       self.brain = PeanutBrainBuild()
     def Die(self):
         self.Fitness -= 1
         self.isAlive = False
