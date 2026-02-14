@@ -93,7 +93,7 @@ def LearnPulse():
 def DecreaseSatiation(animal: Animal):
     animal.Satiation -= rate * animal.Hunger/60
     if(animal.Satiation <= 0):
-        print("Ded animal fitness: ",animal.Die())
+        print("animal ded due to low satiation, fitness: ",animal.Die())
 
 def EatEmUp():
     rects = [a.rect for a in animalList]
@@ -133,8 +133,8 @@ def RizzGame(other, animal):
             print("Animal Rejected")
             break
         else:
-            animal.Satiation = max(0, animal.Satiation - 10)
-            mate.Satiation = max(0, mate.Satiation - 10)
+            animal.Satiation = max(0, animal.Satiation - 25)
+            mate.Satiation = max(0, mate.Satiation - 25)
             WelcomeKid(animal,mate)
             break
 
@@ -142,6 +142,9 @@ def WelcomeKid(animal, mate):
     if len(animalList) >= totalGuyCount:
         print("animal limit exceeded")
         return
+    print("Welcome, kid")
+    animal.Fitness += 0.5
+    mate.Fitness += 0.5
     child = Crossover(animal,mate)
     child.speed = rd.uniform(0.5,2.5)
     child.rect.x = (animal.rect.x + mate.rect.x)/2
