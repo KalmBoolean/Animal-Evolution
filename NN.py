@@ -10,9 +10,9 @@ class BrainLayer(nn.Module):
         self.actfn = nn.LeakyReLU(0.01)
     def forward(self,x, out: bool):
         if out:
-            y = self.actfn(self.actLayer(x))
-        else:
             y = tc.tanh(self.actLayer(x))
+        else:
+            y = self.actfn(self.actLayer(x))
         self.lx = x.detach()
         self.ly = y.detach()
         return y
@@ -34,7 +34,7 @@ class Brain(nn.Module):
 
     def forward(self, x):
         for i, layer in enumerate(self.layers):
-            out = (i < len(self.layers) - 1)
+            out = (i == len(self.layers) - 1)
             x = layer(x, out)
         return x
 
