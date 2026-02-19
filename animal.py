@@ -4,8 +4,7 @@ import pygame
 import torch as tc
 
 class Animal:
-    def __init__(self,name = "DefaultPeanut",powLevel = 0,Hunger = 0,Fertility = 0,isPredator : bool = False):
-       self.Name = name
+    def __init__(self,powLevel = 0,Hunger = 0,Fertility = 0,isPredator : bool = False):
        self.powLevel = powLevel
        self.Hunger = Hunger
        self.Fertility = Fertility       
@@ -24,12 +23,12 @@ class Animal:
         self.isAlive = False
         return self.Fitness
     def RandomiseProperties(self):
-        self.powLevel = rd.uniform(0.5, 2.0)                 
+        self.powLevel = rd.uniform(0.1, 1.0)                 
         self.Fertility = rd.uniform(0.1, 1.0)       
         self.Fitness = 0
         self.isAlive = True
         self.isPredator = rd.randint(0, 1)
-        self.Hunger = rd.uniform(0, self.powLevel + self.Fertility) * 100
+        self.Hunger = rd.uniform(0, self.powLevel + self.Fertility) * 50
     def Reason(self):
         inputs = tc.tensor([
             self.Satiation,

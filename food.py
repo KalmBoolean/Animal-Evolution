@@ -8,5 +8,5 @@ class Food:
             print("ded animul no no foody")
             return
         animal.Satiation = min(100, animal.Satiation + 30)
-        animal.Fitness += 0.5
+        animal.Fitness += 1
         self.isConsumed = True

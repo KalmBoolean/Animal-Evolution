@@ -4,20 +4,22 @@ from pygame.math import Vector2
 from animal import *
 from genetichelper import *
 from food import *
+import time
+import gc
 
 width, height = 1280, 720
 startNum = 20
 foodspawnRate = 1200 
-pulseRate = 2000 
+pulseRate = 7000 
 foodRad = 6
 animalRad = 10
 maxFood = 10
 animalList = []
 foodList = []
-rate = 0.3 #sat decrease rate
+rate = 0.5 #sat decrease rate
 genCount = 0
 totalGuyCount = 50
-rewardRate = 3000
+rewardRate = 4500
 genTimer = 10000
 
 def InitialSpawn(n):
@@ -27,7 +29,7 @@ def InitialSpawn(n):
 
         a.rect.x = rd.randint(animalRad, width - animalRad)
         a.rect.y = rd.randint(animalRad, height - animalRad)
-        a.speed = rd.uniform(0.5, 2.5)
+        a.speed = rd.uniform(1.2,2)
 
         animalList.append(a)
 
@@ -87,7 +89,7 @@ def LearnPulse():
     for animal in animalList:
         df = animal.calcDelta()
         if(df > 0):
-            animal.brain.HebbPulse(0.3,df)
+            animal.brain.HebbPulse(0.25,df)
 
 
 def DecreaseSatiation(animal: Animal):
@@ -117,6 +119,7 @@ def ChanceGame(other, animal):
         if chance < roll:
             print("boohoo animal eaten with fitness: ", animal.Die())
             predator.Satiation = min(100,predator.Satiation + 40)
+            predator.Fitness += 1
             break
 
 def RizzGame(other, animal):
@@ -146,7 +149,7 @@ def WelcomeKid(animal, mate):
     animal.Fitness += 0.5
     mate.Fitness += 0.5
     child = Crossover(animal,mate)
-    child.speed = rd.uniform(0.5,2.5)
+    child.speed = rd.uniform(1.2,2)
     child.rect.x = (animal.rect.x + mate.rect.x)/2
     child.rect.y = (animal.rect.y + mate.rect.y)/2
     animalList.append(child)
@@ -178,9 +181,10 @@ def BreedEmUp():
 def NextGen():
     global genCount
     genCount += 1
+    
     prey = [a for a in animalList if not a.isPredator]
     predators = [a for a in animalList if a.isPredator]
-
+    
     prey.sort(key=lambda a: a.Fitness, reverse=True)
     predators.sort(key=lambda a: a.Fitness, reverse=True)
 
@@ -193,6 +197,10 @@ def NextGen():
         childprey.speed = rd.uniform(0.5,2.5)
         childpred  = Crossover(bpred,spred)
         childpred.speed = rd.uniform(0.5,2.5)
+        for layer in childpred.brain.layers:
+            layer.e.zero_()
+        for layer in childprey.brain.layers:
+            layer.e.zero_()
         childprey.rect.x = rd.randint(animalRad, width - animalRad)
         childprey.rect.y = rd.randint(animalRad, height - animalRad)
         childpred.rect.x = rd.randint(animalRad, width - animalRad)
@@ -209,7 +217,7 @@ def NextGen():
     bpred.isAlive = True
     animalList.append(bprey)
     animalList.append(bpred)
-
+    gc.collect()
 
 
 pygame.init()
@@ -236,7 +244,7 @@ nextgen = pygame.USEREVENT + 5
 pygame.time.set_timer(foodSpawn, foodspawnRate)
 pygame.time.set_timer(pulse, pulseRate)
 pygame.time.set_timer(reward, rewardRate)
-pygame.time.set_timer(eatorbreed, 4000)
+pygame.time.set_timer(eatorbreed, 2000)
 pygame.time.set_timer(nextgen, genTimer)
 
 run = True
@@ -265,7 +273,7 @@ while run:
 
     now = pygame.time.get_ticks()
     pulseVal = max(0, (pulseRate - (now - lPulse)) // 1000)
-    eatVal = max(0, (4000 - (now - lEatBreed)) // 1000)
+    eatVal = max(0, (2000 - (now - lEatBreed)) // 1000)
     rewardVal = max(0, (rewardRate - (now - lReward)) // 1000)
     genVal = max(0, (genTimer - (now - lNextGen)) // 1000)
 

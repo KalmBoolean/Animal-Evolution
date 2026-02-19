@@ -18,10 +18,13 @@ class BrainLayer(nn.Module):
         return y
     def UpdateE(self, dec): 
         self.e = dec * self.e + tc.outer(self.ly, self.lx) 
-    
-    def HebbLearn(self, lr, deltaF): 
-        with tc.no_grad(): 
+        self.e = self.e / (self.e.norm(dim=1, keepdim=True) + 1e-6)
+
+    def HebbLearn(self, lr, deltaF):
+        with tc.no_grad():
             self.actLayer.weight += lr * deltaF * self.e
+
+
 
 class Brain(nn.Module):
     def __init__(self):
